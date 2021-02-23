@@ -1,14 +1,29 @@
 import express from "express";
-import 'dotenv/config'
+import "dotenv/config";
+import { ApolloServer } from "apollo-server-express";
+import { schema } from "./schema";
+import { sequelize } from "./db";
 
-const app = express();
+async function main() {
+  const app = express();
 
-app.get("/hello", (_, res) => {
-  res.send("world");
-});
+  const server = new ApolloServer({ schema });
 
-const port = process.env.PORT;
+  server.applyMiddleware({ app });
 
-app.listen(port, () => {
-  console.log(`Server listening on http://localhost:${port}`);
-});
+  await sequelize.sync({
+    alter: true,
+    force: true,
+  });
+
+  const port = process.env.PORT;
+
+  app.listen(port, () => {
+    console.log(`Server listening on http://localhost:${port}`);
+    console.log(
+      `Graphql listening on http://localhost:${port}${server.graphqlPath}`
+    );
+  });
+}
+
+main();
